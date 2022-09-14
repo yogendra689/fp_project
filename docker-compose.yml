@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  mysql_db:
+    container_name: 'mysql_db'
+    image: mysql:8.0.29
+    ports:
+      - '3307:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: 'password'
+    command: ['mysqld', '--default-authentication-plugin=mysql_native_password']
+    volumes:
+      - 'db:/var/lib/mysql'
+  web:
+    build: .
+    container_name: 'web'
+    image: finance_peer
+    command: python3 manage.py runserver 0.0.0.0:8001
+    volumes:
+      - '.:/base_directory'
+    ports:
+      - "8001:8001"
+    depends_on:
+      - migration
+      - mysql_db
+  migration:
+    image: finance_peer
+    command: python manage.py migrate --noinput
+    volumes:
+      - .:/code
+    depends_on:
+      - mysql_db
+
+volumes:
+  db:
+  .:
